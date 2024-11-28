@@ -1,0 +1,76 @@
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+# Data for views
+views_data <- data.frame(
+  Category = c(rep("Meme Video", 26), rep("Hype Video", 33), rep("Player In-Game", 28), rep("Sponsored Video", 12)),
+  Views = c(
+    # Meme Video views
+    12000000, 2200000, 215000, 383000, 257000, 666000, 273000, 1700000, 388000, 264000, 3400000, 1800000, 1900000, 
+    270000, 2700000, 364000, 381000, 3300000, 102000, 244000, 101000, 158000, 1500000, 154000, 1800000, 2900000,
+    # Hype Video views
+    55900, 109000, 174000, 274000, 111000, 208000, 84000, 127000, 187000, 153000, 174000, 380000, 147000, 175000, 
+    209000, 160000, 99200, 188000, 203000, 226000, 255000, 458000, 892000, 364000, 187000, 966000, 1300000, 425000, 
+    254000, 458000, 320000, 553000, 152000,
+    # Player In-Game views
+    149000, 175000, 254000, 331000, 285000, 301000, 1100000, 554000, 86300, 426000, 321000, 357000, 331000, 409000, 
+    209000, 370000, 167000, 892000, 400000, 1500000, 458000, 223000, 1700000, 398000, 389000, 490000, 346000, 527000,
+    # Sponsored Video views
+    127000, 111000, 73100, 104000, 226000, 82600, 188000, 195000, 105000, 244000, 114000, 208000
+  )
+)
+# Calculate the number of samples per category and statistics
+views_summary <- views_data %>%
+  group_by(Category) %>%
+  summarise(
+    Count = n(),
+    Avg_Views = mean(Views),
+    SD_Views = sd(Views)
+  )
+
+# Plot views data with highlighted "Meme Video" category and sample size
+views_plot <- ggplot(views_summary, aes(x = Category, y = Avg_Views, fill = Category == "Meme Video")) +
+  geom_bar(stat = "identity") +
+  geom_errorbar(aes(ymin = Avg_Views - SD_Views, ymax = Avg_Views + SD_Views), width = 0.2) +
+  geom_text(aes(label = paste("n =", Count)), vjust = -0.5, color = "black", size = 3.5) +
+  scale_fill_manual(values = c("TRUE" = "#FF5733", "FALSE" = "#C0C0C0")) +
+  theme_minimal() +
+  labs(
+    title = "LA Chargers Social Media Reels: Average Views by Category",
+    x = "Video Category",
+    y = "Average Number of Views (in Millions)"
+  ) +
+  scale_y_continuous(labels = function(x) x / 1e6, expand = expansion(mult = c(0, 0.1))) +
+  theme(legend.position = "none")
+print(views_plot)
+
+# Data for top meme video engagement
+engagement_data <- data.frame(
+  Video = paste("Meme Video", 1:5),
+  Views = c(3400000, 1840000, 1930000, 12000000, 3300000),
+  Likes = c(148000, 50000, 58000, 905000, 55000),
+  Comments = c(478, 310, 220, 2392, 293),
+  Shares = c(8400, 3400, 8200, 168000, 4000)
+)
+
+# Pivot engagement data for combined plot
+engagement_melted <- engagement_data %>%
+  pivot_longer(cols = c(Likes, Comments, Shares), names_to = "Metric", values_to = "Count")
+
+# Plot for combined engagement metrics
+engagement_plot <- ggplot(engagement_melted, aes(x = reorder(Video, -Count), y = Count, fill = Metric)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_text(aes(label = scales::comma(Count / 1e4)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
+  scale_fill_manual(values = c("Likes" = "#2E8B57", "Comments" = "#FFA500", "Shares" = "#6A5ACD")) +
+  theme_minimal() +
+  labs(
+    title = "Engagement Metrics on Top Meme Videos",
+    x = "Top Meme Video",
+    y = "Engagement Count (in thousands)",
+    fill = "Metric"
+  ) +
+  scale_y_continuous(labels = function(x) x / 1e6, expand = expansion(mult = c(0, 0.1)))
+
+# Display plots
+print(engagement_plot)
